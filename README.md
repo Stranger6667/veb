@@ -34,6 +34,7 @@ TODO:
 - [ ] Eq
 - [ ] Some `From` impls (e.g. `&[usize]`)
 - [ ] O(n) space
+- [ ] Use bit vectors when size is <= word size
 - [ ] More tests
 - [ ] Detailed comments & docs
 - [ ] Arena-based allocation

@@ -12,7 +12,7 @@ impl VebTree {
     #[must_use]
     pub fn new(max_element: usize) -> Self {
         let cluster_size = (max_element as f64).sqrt() as usize;
-        let summary = if max_element == 1 {
+        let summary = if max_element <= 2 {
             None
         } else {
             Some(Box::new(Self::new(cluster_size)))
@@ -47,15 +47,15 @@ impl VebTree {
         self.min.is_none()
     }
 
-    pub fn insert(&mut self, mut value: usize) {
+    pub fn insert(&mut self, value: usize) {
         match self.min {
             None => {
                 self.min = Some(value);
                 self.max = Some(value);
             }
-            Some(mut min) => {
+            Some(min) => {
                 if value < min {
-                    mem::swap(&mut min, &mut value);
+                    mem::swap(&mut self.min, &mut Some(value));
                 }
                 if value > self.max.expect("Max value is not set") {
                     self.max = Some(value);
@@ -119,16 +119,33 @@ mod tests {
     }
 
     #[test]
+    fn small_insert() {
+        let mut tree = VebTree::new(4);
+        tree.insert(2);
+        assert_eq!(tree.min, Some(2));
+        assert_eq!(tree.max, Some(2));
+        tree.insert(3);
+        assert_eq!(tree.min, Some(2));
+        assert_eq!(tree.max, Some(3));
+        tree.insert(1);
+        assert_eq!(tree.min, Some(1));
+        assert_eq!(tree.max, Some(3));
+    }
+
+    #[test]
     fn insert() {
-        let max_element = 1024 * 16;
-        let mut tree = VebTree::new(max_element);
-        assert!(tree.is_empty());
-        for value in 0..=max_element {
-            assert!(!tree.contains(value));
-            tree.insert(value);
-            assert!(tree.contains(value));
+        for max_element in 1..256 {
+            let mut tree = VebTree::new(max_element);
+            assert!(tree.is_empty());
+            for value in 0..=max_element {
+                assert!(!tree.contains(value));
+                tree.insert(value);
+                assert!(tree.contains(value));
+                assert_eq!(tree.min, Some(0));
+                assert_eq!(tree.max, Some(value));
+            }
+            assert!(!tree.is_empty());
         }
-        assert!(!tree.is_empty());
     }
 
     #[test]
