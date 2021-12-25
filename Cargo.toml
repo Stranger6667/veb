@@ -4,7 +4,16 @@ version = "0.1.0"
 authors = ["Dmitry Dygalo <dadygalo@gmail.com>"]
 edition = "2021"
 description = "Implementation of a van Emde Boas tree"
+keywords = ["successor", "predecessor", "tree", "priority queue"]
+categories = ["data-structures"]
 license = "MIT"
 repository = "https://github.com/Stranger6667/veb"
 
 [dependencies]
+
+[dev-dependencies]
+criterion = ">= 0.3"
+
+[[bench]]
+harness = false
+name = "veb"

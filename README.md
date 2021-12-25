@@ -18,7 +18,8 @@ TODO:
 - [x] Contains
 - [ ] Delete one
 - [ ] Delete all
-- [ ] Find next
+- [ ] Store values associated with keys
+- [x] Find next
 - [ ] Find prev
 - [ ] Size
 - [ ] Iteration + exact size iteration + fused, double ended iterator
