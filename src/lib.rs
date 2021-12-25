@@ -11,18 +11,12 @@ pub struct VebTree {
 impl VebTree {
     #[must_use]
     pub fn new(max_element: usize) -> Self {
-        let cluster_size = (max_element as f64).sqrt() as usize;
-        let summary = if max_element <= 2 {
-            None
-        } else {
-            Some(Box::new(Self::new(cluster_size)))
-        };
         Self {
             clusters: HashMap::new(),
-            summary,
+            summary: None,
             min: None,
             max: None,
-            cluster_size,
+            cluster_size: (max_element as f64).sqrt() as usize,
         }
     }
 
@@ -47,32 +41,42 @@ impl VebTree {
         self.min.is_none()
     }
 
+    /// Insert a value into the tree.
     pub fn insert(&mut self, value: usize) {
         match self.min {
+            // First insertion - the tree is empty
             None => {
                 self.min = Some(value);
                 self.max = Some(value);
             }
             Some(min) => {
+                // If `value` is lower than the existing minimum, then replace `min` with it,
+                // and insert the old `min` value to the proper cluster.
                 if value < min {
                     mem::swap(&mut self.min, &mut Some(value));
                 }
-                if value > self.max.expect("Max value is not set") {
+                // Update `max` if this value is greater.
+                if value > self.max.expect("Max value is set at this point") {
                     self.max = Some(value);
                 }
                 let high = self.high(value);
-                if let Some(cluster) = self.clusters.get(&high) {
-                    if cluster.min.is_none() {
-                        let summary = &mut **self.summary.as_mut().unwrap();
-                        summary.insert(high);
-                    }
-                }
                 let low = self.low(value);
-                let entry = self
+                // The cluster where `value` should be placed
+                let cluster = self
                     .clusters
                     .entry(high)
+                    // Create an empty cluster if there is no corresponding one yet
                     .or_insert_with(|| VebTree::new(self.cluster_size));
-                entry.insert(low);
+                if cluster.is_empty() {
+                    // If this cluster is empty, then we need to update the summary to reflect that
+                    // this cluster is now non-empty.
+                    // In this case, the `insert` call to this cluster is O(1) - see the
+                    // "first insertion" block in the beginning of this function.
+                    self.summary
+                        .get_or_insert_with(|| Box::new(VebTree::new(self.cluster_size)))
+                        .insert(high)
+                }
+                cluster.insert(low)
             }
         }
     }
