@@ -81,6 +81,39 @@ impl VebTree {
         }
     }
 
+    pub fn remove(&mut self, mut value: usize) {
+        // TODO. avoid `unwrap`
+        if self.min == Some(value) {
+            if let Some(min) = self
+                .summary
+                .get_or_insert_with(|| Box::new(VebTree::new(self.cluster_size)))
+                .min
+            {
+                let cluster_min = self.clusters.get(&min).unwrap().min.unwrap();
+                value = self.index(min, cluster_min);
+                self.min = Some(value);
+            } else {
+                self.min = None;
+                self.max = None;
+                return;
+            }
+        }
+        let high = self.high(value);
+        let low = self.low(value);
+        let cluster = self.clusters.get_mut(&high).unwrap();
+        cluster.remove(low);
+        if cluster.min.is_none() {
+            self.summary.as_mut().unwrap().remove(high);
+        }
+        if self.max == Some(value) {
+            if let Some(max) = self.summary.as_ref().unwrap().max {
+                self.max = Some(self.index(max, self.clusters.get(&max).unwrap().max.unwrap()));
+            } else {
+                self.max = self.min
+            }
+        }
+    }
+
     #[must_use]
     pub fn contains(&self, value: usize) -> bool {
         if self.min.map_or(false, |min| min == value) || self.max.map_or(false, |max| max == value)
@@ -167,5 +200,23 @@ mod tests {
         for value in new_value..=max_element {
             assert!(tree.find_next(value).is_none());
         }
+    }
+
+    #[test]
+    fn remove() {
+        let mut tree = VebTree::new(50);
+        tree.insert(25);
+        assert!(tree.contains(25));
+        assert!(!tree.contains(26));
+        tree.insert(26);
+        assert!(tree.contains(25));
+        assert!(tree.contains(26));
+        tree.remove(26);
+        assert!(!tree.contains(26));
+        assert!(tree.contains(25));
+        tree.remove(25);
+        assert!(!tree.contains(26));
+        assert!(!tree.contains(25));
+        assert!(tree.is_empty());
     }
 }

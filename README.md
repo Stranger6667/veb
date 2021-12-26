@@ -16,7 +16,7 @@ fn main() {
 TODO:
 - [x] Insert
 - [x] Contains
-- [ ] Delete one
+- [x] Delete one
 - [ ] Delete all
 - [ ] Store values associated with keys
 - [x] Find next
